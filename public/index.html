@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Password Generator</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #242736;
+    --border: #2e3145;
+    --text: #e4e6f0;
+    --text2: #8b8fa3;
+    --accent: #6c5ce7;
+    --accent2: #a29bfe;
+    --red: #ff6b6b;
+    --yellow: #ffd93d;
+    --green: #51cf66;
+    --bright-green: #69db7c;
+    --radius: 12px;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    padding: 40px 16px;
+  }
+
+  .container { width: 100%; max-width: 520px; }
+
+  h1 { font-size: 1.8rem; text-align: center; margin-bottom: 8px; }
+  .subtitle { text-align: center; color: var(--text2); margin-bottom: 32px; font-size: 0.9rem; }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 4px;
+    margin-bottom: 24px;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 10px;
+    text-align: center;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text2);
+    transition: all 0.2s;
+    border: none;
+    background: none;
+  }
+
+  .tab.active { background: var(--accent); color: #fff; }
+  .tab:hover:not(.active) { color: var(--text); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 20px;
+  }
+
+  .output-box {
+    background: var(--surface2);
+    border-radius: 8px;
+    padding: 16px 20px;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 1.15rem;
+    word-break: break-all;
+    min-height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+    margin-bottom: 16px;
+    letter-spacing: 0.5px;
+    transition: all 0.3s;
+  }
+
+  .output-box.flash { background: var(--accent); }
+
+  .strength-bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface2);
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .strength-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.4s ease, background 0.4s;
+    width: 0%;
+  }
+
+  .strength-label {
+    font-size: 0.8rem;
+    color: var(--text2);
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--text2);
+    margin-bottom: 6px;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .slider-row input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+    height: 6px;
+  }
+
+  .slider-val {
+    font-weight: 700;
+    min-width: 32px;
+    text-align: center;
+    font-size: 1.1rem;
+  }
+
+  .options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  .option input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 16px;
+    height: 16px;
+  }
+
+  .btn-row { display: flex; gap: 10px; }
+
+  .btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  .btn:active { transform: scale(0.97); }
+
+  .history { margin-top: 8px; }
+  .history h3 { font-size: 0.9rem; color: var(--text2); margin-bottom: 10px; }
+
+  .history-item {
+    background: var(--surface2);
+    border-radius: 6px;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    font-family: monospace;
+    font-size: 0.82rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .history-item:hover { background: var(--border); }
+  .history-item .time { color: var(--text2); font-size: 0.75rem; }
+
+  .passphrase-section, .pin-section { display: none; }
+  .passphrase-section.active, .pin-section.active, .password-section.active { display: block; }
+
+  .copied {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--green);
+    color: #000;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s;
+    z-index: 100;
+  }
+
+  .copied.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Password Generator</h1>
+  <p class="subtitle">Cryptographically secure. Zero tracking.</p>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('password')">Password</button>
+    <button class="tab" onclick="switchTab('passphrase')">Passphrase</button>
+    <button class="tab" onclick="switchTab('pin')">PIN</button>
+  </div>
+
+  <div class="card">
+    <div class="output-box" id="output" onclick="copyPassword()">Click Generate</div>
+
+    <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+    <div class="strength-label">
+      <span id="strengthText">—</span>
+      <span id="strengthScore">—</span>
+    </div>
+
+    <!-- Password section -->
+    <div class="password-section active" id="passwordSection">
+      <label>Length</label>
+      <div class="slider-row">
+        <input type="range" id="lengthSlider" min="4" max="128" value="16" oninput="updateSlider()">
+        <span class="slider-val" id="lengthVal">16</span>
+      </div>
+
+      <div class="options">
+        <label class="option"><input type="checkbox" id="chkUpper" checked> Uppercase (A-Z)</label>
+        <label class="option"><input type="checkbox" id="chkNumbers" checked> Numbers (0-9)</label>
+        <label class="option"><input type="checkbox" id="chkSymbols" checked> Symbols (!@#)</label>
+        <label class="option"><input type="checkbox" id="chkLower" checked disabled> Lowercase (a-z)</label>
+      </div>
+    </div>
+
+    <!-- Passphrase section -->
+    <div class="passphrase-section" id="passphraseSection">
+      <label>Number of words</label>
+      <div class="slider-row">
+        <input type="range" id="wordsSlider" min="3" max="10" value="4" oninput="updateWordsSlider()">
+        <span class="slider-val" id="wordsVal">4</span>
+      </div>
+    </div>
+
+    <!-- PIN section -->
+    <div class="pin-section" id="pinSection">
+      <label>PIN length</label>
+      <div class="slider-row">
+        <input type="range" id="pinSlider" min="4" max="12" value="6" oninput="updatePinSlider()">
+        <span class="slider-val" id="pinVal">6</span>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-primary" id="genBtn" onclick="generate()">Generate</button>
+      <button class="btn btn-secondary" onclick="copyPassword()">Copy</button>
+    </div>
+  </div>
+
+  <div class="card history" id="historyCard" style="display:none">
+    <h3>History (this session)</h3>
+    <div id="historyList"></div>
+  </div>
+</div>
+
+<div class="copied" id="copiedToast">Copied!</div>
+
+<script>
+  let currentPassword = "";
+  let currentMode = "password";
+  let history = [];
+
+  function switchTab(mode) {
+    currentMode = mode;
+    document.querySelectorAll(".tab").forEach((t, i) => {
+      t.classList.toggle("active", ["password","passphrase","pin"][i] === mode);
+    });
+    document.getElementById("passwordSection").classList.toggle("active", mode === "password");
+    document.getElementById("passphraseSection").classList.toggle("active", mode === "passphrase");
+    document.getElementById("pinSection").classList.toggle("active", mode === "pin");
+  }
+
+  function updateSlider() {
+    document.getElementById("lengthVal").textContent = document.getElementById("lengthSlider").value;
+  }
+  function updateWordsSlider() {
+    document.getElementById("wordsVal").textContent = document.getElementById("wordsSlider").value;
+  }
+  function updatePinSlider() {
+    document.getElementById("pinVal").textContent = document.getElementById("pinSlider").value;
+  }
+
+  async function generate() {
+    const btn = document.getElementById("genBtn");
+    btn.textContent = "...";
+
+    let body = {};
+    if (currentMode === "password") {
+      body = {
+        mode: "password",
+        length: parseInt(document.getElementById("lengthSlider").value),
+        uppercase: document.getElementById("chkUpper").checked,
+        numbers: document.getElementById("chkNumbers").checked,
+        symbols: document.getElementById("chkSymbols").checked,
+      };
+    } else if (currentMode === "passphrase") {
+      body = { mode: "passphrase", words: parseInt(document.getElementById("wordsSlider").value) };
+    } else {
+      body = { mode: "pin", length: parseInt(document.getElementById("pinSlider").value) };
+    }
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      currentPassword = data.password;
+
+      const box = document.getElementById("output");
+      box.textContent = data.password;
+      box.classList.add("flash");
+      setTimeout(() => box.classList.remove("flash"), 200);
+
+      updateStrength(data.strength);
+      addHistory(data.password);
+    } catch (e) {
+      document.getElementById("output").textContent = "Error";
+    }
+
+    btn.textContent = "Generate";
+  }
+
+  function updateStrength(s) {
+    if (!s) return;
+    const fill = document.getElementById("strengthFill");
+    fill.style.width = s.score + "%";
+
+    let color;
+    if (s.score >= 80) color = "var(--bright-green)";
+    else if (s.score >= 60) color = "var(--green)";
+    else if (s.score >= 35) color = "var(--yellow)";
+    else color = "var(--red)";
+    fill.style.background = color;
+
+    document.getElementById("strengthText").textContent = s.level;
+    document.getElementById("strengthText").style.color = color;
+    document.getElementById("strengthScore").textContent = s.score + "/100 (" + s.entropy + " bits)";
+  }
+
+  function addHistory(pw) {
+    const time = new Date().toLocaleTimeString();
+    history.unshift({ pw, time });
+    if (history.length > 20) history.pop();
+    renderHistory();
+  }
+
+  function renderHistory() {
+    const card = document.getElementById("historyCard");
+    const list = document.getElementById("historyList");
+    card.style.display = "block";
+    list.innerHTML = history.map(h =>
+      `<div class="history-item" onclick="copyText('${h.pw.replace(/'/g, "\\'")}')">
+        <span>${h.pw}</span><span class="time">${h.time}</span>
+      </div>`
+    ).join("");
+  }
+
+  function copyPassword() {
+    if (currentPassword) copyText(currentPassword);
+  }
+
+  function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+      const toast = document.getElementById("copiedToast");
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 1500);
+    });
+  }
+
+  // Generate one on load
+  generate();
+</script>
+</body>
+</html>

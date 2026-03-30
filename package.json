@@ -1,0 +1,26 @@
+{
+  "name": "password-gen",
+  "version": "1.0.0",
+  "description": "Secure password generator with CLI and web UI. Zero external dependencies.",
+  "main": "dist/index.js",
+  "bin": {
+    "password-gen": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "password",
+    "generator",
+    "security",
+    "cli",
+    "passphrase"
+  ],
+  "author": "Zakaria Kone",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^5.9.3"
+  }
+}
